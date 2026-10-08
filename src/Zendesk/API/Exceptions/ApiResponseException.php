@@ -3,6 +3,7 @@
 namespace Zendesk\API\Exceptions;
 
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
 
@@ -31,13 +32,29 @@ class ApiResponseException extends \Exception
             $message .= ' [details] Zendesk may be experiencing internal issues or undergoing scheduled maintenance.';
         } elseif (! $e->hasResponse()) {
             $request = $e->getRequest();
-            // Unsuccessful response, log what we can
+            // Unsuccessful response. Log the URL and method. Do not log the body: an OAuth token
+            // request body contains the client secret.
             $message .= ' [url] ' . $request->getUri();
             $message .= ' [http method] ' . $request->getMethod();
-            $message .= ' [body] ' . $request->getBody()->getContents();
         }
 
         parent::__construct($message, $e->getCode(), $e);
+    }
+
+    /**
+     * Wraps a connection failure in a RequestException.
+     *
+     * Guzzle 7 does not make ConnectException a RequestException. This wrapper keeps the
+     * Guzzle 6 behaviour: a connection failure gives an ApiResponseException with the
+     * request details in the message.
+     *
+     * @param ConnectException $e
+     *
+     * @return RequestException
+     */
+    public static function requestExceptionFromConnectException(ConnectException $e)
+    {
+        return new RequestException($e->getMessage(), $e->getRequest(), null, $e, $e->getHandlerContext());
     }
 
     /**

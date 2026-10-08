@@ -8,7 +8,6 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Stream;
 use Zendesk\API\Http;
 use Zendesk\API\HttpClient;
 
@@ -67,19 +66,8 @@ class HttpTest extends BasicTest
      */
     private function mockRequestException($message)
     {
-        $request = $this->getMockBuilder(Request::class)
-                 ->disableOriginalConstructor()
-                 ->getMock();
-        $response = $this->getMockBuilder(Response::class)
-                  ->disableOriginalConstructor()
-                  ->getMock();
-        $body = $this->getMockBuilder(Stream::class)
-                      ->disableOriginalConstructor()
-                      ->getMock();
-        $request->method('getBody')
-            ->will($this->returnValue($body));
-        $response->method('getBody')
-            ->will($this->returnValue($body));
+        $request = new Request('GET', 'https://example.zendesk.com/api/v2/');
+        $response = new Response(500);
 
         return new RequestException($message, $request, $response);
     }

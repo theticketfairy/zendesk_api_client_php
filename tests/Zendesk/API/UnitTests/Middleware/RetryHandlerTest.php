@@ -4,6 +4,7 @@ namespace Zendesk\API\UnitTests\Middleware;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
@@ -36,7 +37,9 @@ class RetryHandlerTest extends BasicTest
             }
         ];
         $client = $this->mockApiResponses([
-            new $exception('', new Request('GET', '')),
+            is_subclass_of($exception, BadResponseException::class)
+                ? new $exception('', new Request('GET', ''), new Response(500))
+                : new $exception('', new Request('GET', '')),
             new Response(200),
         ], ['handlers' => [
             new RetryHandler($config)
@@ -236,7 +239,7 @@ class RetryHandlerTest extends BasicTest
     private function checkRequest(Client $client, $success, $exception = ConnectException::class)
     {
         if (!$success) {
-            $this->setExpectedException($exception);
+            $this->expectException($exception);
         }
 
         $response = $client->get('/');
