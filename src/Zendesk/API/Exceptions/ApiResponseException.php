@@ -32,10 +32,10 @@ class ApiResponseException extends \Exception
             $message .= ' [details] Zendesk may be experiencing internal issues or undergoing scheduled maintenance.';
         } elseif (! $e->hasResponse()) {
             $request = $e->getRequest();
-            // Unsuccessful response, log what we can
+            // Unsuccessful response. Log the URL and method. Do not log the body: an OAuth token
+            // request body contains the client secret.
             $message .= ' [url] ' . $request->getUri();
             $message .= ' [http method] ' . $request->getMethod();
-            $message .= ' [body] ' . $request->getBody()->getContents();
         }
 
         parent::__construct($message, $e->getCode(), $e);
